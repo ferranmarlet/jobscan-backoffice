@@ -32,7 +32,29 @@ To use a real API, copy `.env.example` to `.env.local` and set `API_URL`. The de
 | `npm run preview` | Serve the production build locally |
 | `npm run lint` | Run ESLint |
 
-The mock and the proxy only run in development. In production, whatever hosts the app must route `/api` to the API.
+The mock and the proxy only run in development. In production, CloudFront routes `/api` to the API.
+
+## Deployment
+
+The site is served from S3 through CloudFront, which sends read-only `/api/*` requests to the existing API instance. `terraform/` defines this and reads the API stack's state from `../jobscan/terraform`, so that stack must already be deployed.
+
+Create the infrastructure:
+
+```sh
+terraform -chdir=terraform init
+terraform -chdir=terraform apply
+```
+
+Publish the site:
+
+```sh
+npm run build
+aws s3 sync dist "s3://$(terraform -chdir=terraform output -raw bucket_name)" --delete
+aws cloudfront create-invalidation --paths '/*' \
+  --distribution-id "$(terraform -chdir=terraform output -raw distribution_id)"
+```
+
+If the API's Auto Scaling group replaces the instance, run `terraform -chdir=terraform apply` again to move the Elastic IP to the new instance. The API is unreachable from the site until then.
 
 ## API contract
 
@@ -75,6 +97,7 @@ vite.config.ts          Chooses between the mock and the API proxy
 src/PagedTable.tsx      Reusable table with filters and pagination
 src/JobPostings.tsx     Job posting type, columns and filters
 src/index.css           Styles
+terraform/              S3 and CloudFront infrastructure
 ```
 
 ## Adding a table
