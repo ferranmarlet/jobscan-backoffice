@@ -92,7 +92,7 @@ resource "aws_cloudfront_origin_access_control" "frontend" {
   signing_protocol                  = "sigv4"
 }
 
-# The API serves /job-postings/, while the frontend calls /api/job-postings/
+# The API serves /job-postings, while the frontend calls /api/job-postings
 resource "aws_cloudfront_function" "strip_api_prefix" {
   name    = "${var.project_name}-${var.environment}-strip-api-prefix"
   runtime = "cloudfront-js-2.0"

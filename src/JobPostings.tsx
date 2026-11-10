@@ -49,14 +49,14 @@ const columns: Column<JobPosting>[] = [
 const filters: Filter[] = [
   { param: 'status', label: 'Status', options: options('OPEN', 'APPLIED', 'REJECTED', 'CLOSED') },
   { param: 'workMode', label: 'Work mode', options: options('ONSITE', 'HYBRID', 'REMOTE') },
-  { param: 'source', label: 'Source', options: options('findwork') },
+  { param: 'externalSourceId', label: 'Source', options: options('findwork') },
 ]
 
 export function JobPostings() {
   return (
     <main>
       <h1>Job postings</h1>
-      <PagedTable path="/job-postings/" columns={columns} rowKey={(job) => job.id} filters={filters} />
+      <PagedTable path="/job-postings" columns={columns} rowKey={(job) => job.id} filters={filters} />
     </main>
   )
 }

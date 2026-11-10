@@ -9,7 +9,6 @@ Backoffice web app for browsing the job postings collected by the JobScan API. I
 - Server-side pagination
 - Loading, empty and error states
 - Reusable `PagedTable` component that works with any endpoint following the API contract below
-- Mock API for development while the real list endpoint is unfinished
 - Plain CSS with no UI dependencies
 
 ## Getting started
@@ -21,9 +20,7 @@ npm install
 npm run dev
 ```
 
-By default, the dev server answers `/api` requests with mock data from `mockApi.ts`.
-
-To use a real API, copy `.env.example` to `.env.local` and set `API_URL`. The dev server then proxies `/api` requests to that URL, so the API needs no CORS configuration in development.
+The dev server proxies `/api` requests to the JobScan API at `http://localhost:8080` (see the API's README to run it), so the API needs no CORS configuration in development. To use another API, copy `.env.example` to `.env.local` and set `API_URL`.
 
 | Command | Description |
 |---|---|
@@ -32,7 +29,7 @@ To use a real API, copy `.env.example` to `.env.local` and set `API_URL`. The de
 | `npm run preview` | Serve the production build locally |
 | `npm run lint` | Run ESLint |
 
-The mock and the proxy only run in development. In production, CloudFront routes `/api` to the API.
+The proxy only runs in development. In production, CloudFront routes `/api` to the API.
 
 ## Deployment
 
@@ -58,15 +55,15 @@ If the API's Auto Scaling group replaces the instance, run `terraform -chdir=ter
 
 ## API contract
 
-The table expects this endpoint. `page` is zero-based, and all filters are optional.
+The table uses the API's list endpoint. `page` is zero-based, the page size is fixed at 20 by the API, and all filters are optional.
 
 ```
-GET /job-postings/?status=OPEN&workMode=REMOTE&source=findwork&page=0&size=20
+GET /job-postings?status=OPEN&workMode=REMOTE&externalSourceId=findwork&page=0
 ```
 
 ```json
 {
-  "content": [
+  "elements": [
     {
       "id": "5f0c1a52-7c3e-4f7a-9d55-0a1b2c3d4e5f",
       "externalId": "job-1",
@@ -83,17 +80,16 @@ GET /job-postings/?status=OPEN&workMode=REMOTE&source=findwork&page=0&size=20
       "discoveredAt": "2026-10-30T09:15:00Z"
     }
   ],
-  "page": { "size": 20, "number": 0, "totalElements": 1, "totalPages": 1 }
+  "page": 0,
+  "totalPages": 1,
+  "totalElements": 1
 }
 ```
-
-This contract is what the frontend assumes. The API's list endpoint does not implement it yet.
 
 ## Project structure
 
 ```
-mockApi.ts              Mock API plugin for the dev server
-vite.config.ts          Chooses between the mock and the API proxy
+vite.config.ts          Dev server proxy to the API
 src/PagedTable.tsx      Reusable table with filters and pagination
 src/JobPostings.tsx     Job posting type, columns and filters
 src/index.css           Styles
@@ -106,7 +102,7 @@ Pass `PagedTable` a path, columns and a row key. Filters are optional:
 
 ```tsx
 <PagedTable
-  path="/companies/"
+  path="/companies"
   rowKey={(company) => company.id}
   columns={[{ header: 'Name', render: (company) => company.name }]}
   filters={[{ param: 'country', label: 'Country', options: [{ value: 'ES', label: 'Spain' }] }]}

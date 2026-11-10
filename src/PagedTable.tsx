@@ -4,8 +4,10 @@ export type Column<T> = { header: string; render: (row: T) => ReactNode }
 export type Filter = { param: string; label: string; options: { value: string; label: string }[] }
 
 type Page<T> = {
-  content: T[]
-  page: { number: number; totalElements: number; totalPages: number }
+  elements: T[]
+  page: number
+  totalPages: number
+  totalElements: number
 }
 
 type Props<T> = {
@@ -13,10 +15,9 @@ type Props<T> = {
   columns: Column<T>[]
   rowKey: (row: T) => string
   filters?: Filter[]
-  pageSize?: number
 }
 
-export function PagedTable<T>({ path, columns, rowKey, filters = [], pageSize = 20 }: Props<T>) {
+export function PagedTable<T>({ path, columns, rowKey, filters = [] }: Props<T>) {
   const [values, setValues] = useState<Record<string, string>>({})
   const [page, setPage] = useState(0)
   const [data, setData] = useState<Page<T> | null>(null)
@@ -28,7 +29,6 @@ export function PagedTable<T>({ path, columns, rowKey, filters = [], pageSize = 
     const params = new URLSearchParams({
       ...Object.fromEntries(Object.entries(values).filter(([, value]) => value)),
       page: String(page),
-      size: String(pageSize),
     })
     setLoading(true)
     fetch(`/api${path}?${params}`, { signal: controller.signal })
@@ -47,14 +47,14 @@ export function PagedTable<T>({ path, columns, rowKey, filters = [], pageSize = 
         if (!controller.signal.aborted) setLoading(false)
       })
     return () => controller.abort()
-  }, [path, values, page, pageSize])
+  }, [path, values, page])
 
   const setFilter = (param: string, value: string) => {
     setValues({ ...values, [param]: value })
     setPage(0)
   }
 
-  const { number = 0, totalPages = 0, totalElements = 0 } = data?.page ?? {}
+  const { page: number = 0, totalPages = 0, totalElements = 0 } = data ?? {}
 
   return (
     <>
@@ -88,14 +88,14 @@ export function PagedTable<T>({ path, columns, rowKey, filters = [], pageSize = 
             </tr>
           </thead>
           <tbody>
-            {data?.content.map((row) => (
+            {data?.elements.map((row) => (
               <tr key={rowKey(row)}>
                 {columns.map((column) => (
                   <td key={column.header}>{column.render(row) ?? '—'}</td>
                 ))}
               </tr>
             ))}
-            {!data?.content.length && (
+            {!data?.elements.length && (
               <tr>
                 <td className="empty" colSpan={columns.length}>
                   {loading ? 'Loading…' : error ? 'Could not load data' : 'No results'}
