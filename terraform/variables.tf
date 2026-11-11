@@ -33,3 +33,20 @@ variable "api_port" {
   type        = number
   default     = 8080
 }
+
+variable "cognito_mfa_configuration" {
+  description = "MFA mode of the user pool: OFF, OPTIONAL or ON"
+  type        = string
+  default     = "OPTIONAL"
+
+  validation {
+    condition     = contains(["OFF", "OPTIONAL", "ON"], var.cognito_mfa_configuration)
+    error_message = "Must be OFF, OPTIONAL or ON."
+  }
+}
+
+variable "cognito_extra_redirect_urls" {
+  description = "Extra callback/logout URLs for the SPA client, e.g. the local dev server"
+  type        = list(string)
+  default     = ["http://localhost:5173/"]
+}
