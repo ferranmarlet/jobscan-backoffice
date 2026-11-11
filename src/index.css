@@ -35,6 +35,37 @@ a:hover {
   text-decoration: underline;
 }
 
+.resume-upload {
+  margin-bottom: 32px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+}
+
+.resume-upload h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.resume-upload p {
+  margin: 2px 0 12px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.resume-upload-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.resume-upload-file {
+  overflow-wrap: anywhere;
+}
+
 .filters {
   display: flex;
   flex-wrap: wrap;

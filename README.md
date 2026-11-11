@@ -9,6 +9,7 @@ Backoffice web app for browsing the job postings collected by the JobScan API. I
 - Filters by status, work mode and source, applied by the API
 - Server-side pagination
 - Loading, empty and error states
+- Section for choosing a resume file. The file stays in the browser and is not uploaded yet
 - Reusable `PagedTable` component that works with any endpoint following the API contract below
 - Plain CSS with no UI dependencies
 
@@ -102,6 +103,7 @@ The table refetches the current page afterwards. CloudFront forwards `PATCH` to 
 vite.config.ts          Dev server proxy to the API
 src/PagedTable.tsx      Reusable table with filters and pagination
 src/JobPostings.tsx     Job posting type, columns and filters
+src/ResumeUpload.tsx    Resume file picker, not connected to an API yet
 src/index.css           Styles
 terraform/              S3 and CloudFront infrastructure
 ```

@@ -60,7 +60,7 @@ function StatusSelect({ job, onUpdated }: { job: JobPosting; onUpdated: () => vo
         ))}
       </select>
       {error && <div className="cell-error" role="alert">{error}</div>}
-    </main>
+    </>
   )
 }
 
@@ -99,9 +99,9 @@ const filters: Filter[] = [
 
 export function JobPostings() {
   return (
-    <main>
+    <>
       <h1>Job postings</h1>
       <PagedTable path="/job-postings" columns={columns} rowKey={(job) => job.id} filters={filters} />
-    </main>
+    </>
   )
 }
