@@ -134,6 +134,17 @@ tbody tr:last-child td {
   font-weight: 500;
 }
 
+.status-select {
+  min-width: 0;
+  border-color: transparent;
+}
+
+.cell-error {
+  margin-top: 4px;
+  color: #a4262c;
+  font-size: 12px;
+}
+
 .badge.open {
   background: #e3f0fc;
   color: #1f5fa8;

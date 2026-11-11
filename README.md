@@ -5,6 +5,7 @@ Backoffice web app for browsing the job postings collected by the JobScan API. I
 ## Features
 
 - Table of job postings showing title (linked to the original posting), company, location, work mode, seniority, salary, skills, source, status and discovery date
+- Change a posting's status from the table, saved through the API
 - Filters by status, work mode and source, applied by the API
 - Server-side pagination
 - Loading, empty and error states
@@ -85,6 +86,15 @@ GET /job-postings?status=OPEN&workMode=REMOTE&externalSourceId=findwork&page=0
   "totalElements": 1
 }
 ```
+
+Changing a status sends:
+
+```
+PATCH /job-postings/{id}
+{ "status": "APPLIED" }
+```
+
+The table refetches the current page afterwards. CloudFront forwards `PATCH` to the API.
 
 ## Project structure
 

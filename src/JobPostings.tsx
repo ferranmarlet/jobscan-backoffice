@@ -1,4 +1,7 @@
+import { useState } from 'react'
 import { PagedTable, type Column, type Filter } from './PagedTable'
+
+const STATUSES = ['OPEN', 'APPLIED', 'REJECTED', 'CLOSED'] as const
 
 type JobPosting = {
   id: string
@@ -12,12 +15,54 @@ type JobPosting = {
   salary: { min: number; max: number; currency: string } | null
   skills: string[]
   sourceUrl: string
-  status: 'OPEN' | 'APPLIED' | 'REJECTED' | 'CLOSED'
+  status: (typeof STATUSES)[number]
   discoveredAt: string
 }
 
 const capitalize = (value: string) => value.charAt(0).toUpperCase() + value.slice(1).toLowerCase()
 const options = (...values: string[]) => values.map((value) => ({ value, label: capitalize(value) }))
+
+function StatusSelect({ job, onUpdated }: { job: JobPosting; onUpdated: () => void }) {
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const update = async (status: string) => {
+    setSaving(true)
+    setError(null)
+    try {
+      const res = await fetch(`/api/job-postings/${job.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      })
+      if (!res.ok) throw new Error(`Update failed with status ${res.status}`)
+      onUpdated()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Update failed')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <>
+      <select
+        className={`badge status-select ${job.status.toLowerCase()}`}
+        aria-label={`Status of ${job.title}`}
+        value={job.status}
+        disabled={saving}
+        onChange={(e) => update(e.target.value)}
+      >
+        {options(...STATUSES).map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+      {error && <div className="cell-error" role="alert">{error}</div>}
+    </main>
+  )
+}
 
 const columns: Column<JobPosting>[] = [
   {
@@ -41,13 +86,13 @@ const columns: Column<JobPosting>[] = [
   { header: 'Source', render: (job) => capitalize(job.externalSourceId) },
   {
     header: 'Status',
-    render: (job) => <span className={`badge ${job.status.toLowerCase()}`}>{capitalize(job.status)}</span>,
+    render: (job, reload) => <StatusSelect job={job} onUpdated={reload} />,
   },
   { header: 'Discovered', render: (job) => new Date(job.discoveredAt).toLocaleDateString() },
 ]
 
 const filters: Filter[] = [
-  { param: 'status', label: 'Status', options: options('OPEN', 'APPLIED', 'REJECTED', 'CLOSED') },
+  { param: 'status', label: 'Status', options: options(...STATUSES) },
   { param: 'workMode', label: 'Work mode', options: options('ONSITE', 'HYBRID', 'REMOTE') },
   { param: 'externalSourceId', label: 'Source', options: options('findwork') },
 ]

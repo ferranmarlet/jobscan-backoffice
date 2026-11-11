@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react'
 
-export type Column<T> = { header: string; render: (row: T) => ReactNode }
+// reload refetches the current page, for cells that change the row on the server
+export type Column<T> = { header: string; render: (row: T, reload: () => void) => ReactNode }
 export type Filter = { param: string; label: string; options: { value: string; label: string }[] }
 
 type Page<T> = {
@@ -23,6 +24,7 @@ export function PagedTable<T>({ path, columns, rowKey, filters = [] }: Props<T>)
   const [data, setData] = useState<Page<T> | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [reloads, setReloads] = useState(0)
 
   useEffect(() => {
     const controller = new AbortController()
@@ -47,7 +49,9 @@ export function PagedTable<T>({ path, columns, rowKey, filters = [] }: Props<T>)
         if (!controller.signal.aborted) setLoading(false)
       })
     return () => controller.abort()
-  }, [path, values, page])
+  }, [path, values, page, reloads])
+
+  const reload = () => setReloads((count) => count + 1)
 
   const setFilter = (param: string, value: string) => {
     setValues({ ...values, [param]: value })
@@ -91,7 +95,7 @@ export function PagedTable<T>({ path, columns, rowKey, filters = [] }: Props<T>)
             {data?.elements.map((row) => (
               <tr key={rowKey(row)}>
                 {columns.map((column) => (
-                  <td key={column.header}>{column.render(row) ?? '—'}</td>
+                  <td key={column.header}>{column.render(row, reload) ?? '—'}</td>
                 ))}
               </tr>
             ))}
