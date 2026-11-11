@@ -151,12 +151,13 @@ resource "aws_cloudfront_distribution" "main" {
     cache_policy_id        = data.aws_cloudfront_cache_policy.caching_optimized.id
   }
 
-  # Read-only, so POST /import-job-postings can't be reached through CloudFront.
+  # POST /import-job-postings can't be reached through CloudFront. Only GET, status updates (PATCH) and
+  # the CORS preflight are allowed.
   ordered_cache_behavior {
     path_pattern             = "/api/*"
     target_origin_id         = "api"
     viewer_protocol_policy   = "https-only"
-    allowed_methods          = ["GET", "HEAD", "OPTIONS"]
+    allowed_methods          = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
     cached_methods           = ["GET", "HEAD"]
     compress                 = true
     cache_policy_id          = data.aws_cloudfront_cache_policy.caching_disabled.id
