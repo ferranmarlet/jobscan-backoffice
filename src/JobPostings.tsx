@@ -22,6 +22,23 @@ type JobPosting = {
 const capitalize = (value: string) => value.charAt(0).toUpperCase() + value.slice(1).toLowerCase()
 const options = (...values: string[]) => values.map((value) => ({ value, label: capitalize(value) }))
 
+type ProblemDetail = { title?: string; detail?: string; from?: string; to?: string }
+
+// Turns a failed status update into a message, using the problem details the API sends
+async function updateErrorMessage(res: Response): Promise<string> {
+  const problem: ProblemDetail = await res.json().catch(() => ({}))
+  if (res.status === 409 && problem.from && problem.to) {
+    const from = capitalize(problem.from)
+    const to = capitalize(problem.to)
+    return problem.from === problem.to
+      ? `The posting is already ${from}.`
+      : `A ${from} posting can't be changed to ${to}.`
+  }
+  if (res.status === 404) return 'This job posting no longer exists.'
+  if (res.status === 400) return problem.detail ?? 'The status update was not valid.'
+  return `Update failed with status ${res.status}.`
+}
+
 function StatusSelect({ job, onUpdated }: { job: JobPosting; onUpdated: () => void }) {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -35,10 +52,10 @@ function StatusSelect({ job, onUpdated }: { job: JobPosting; onUpdated: () => vo
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status }),
       })
-      if (!res.ok) throw new Error(`Update failed with status ${res.status}`)
+      if (!res.ok) throw new Error(await updateErrorMessage(res))
       onUpdated()
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Update failed')
+      setError(e instanceof Error ? e.message : 'Update failed.')
     } finally {
       setSaving(false)
     }
