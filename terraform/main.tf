@@ -92,7 +92,9 @@ resource "aws_cloudfront_origin_access_control" "frontend" {
   signing_protocol                  = "sigv4"
 }
 
-# The API serves /job-postings, while the frontend calls /api/job-postings
+# The API serves /job-postings, while the frontend calls /api/job-postings.
+# It also rejects POST /import-job-postings, which must not be reachable from the internet. The path is
+# decoded and normalised first, so encoded characters, repeated slashes or ";" path parameters can't get past it.
 resource "aws_cloudfront_function" "strip_api_prefix" {
   name    = "${var.project_name}-${var.environment}-strip-api-prefix"
   runtime = "cloudfront-js-2.0"
@@ -100,8 +102,23 @@ resource "aws_cloudfront_function" "strip_api_prefix" {
 
   code = <<-EOF
     function handler(event) {
-      event.request.uri = event.request.uri.replace(/^\/api/, '');
-      return event.request;
+      var request = event.request;
+      var path = request.uri.replace(/^\/api/, '');
+
+      if (request.method === 'POST') {
+        var normalised;
+        try {
+          normalised = decodeURIComponent(path).replace(/;[^\/]*/g, '').replace(/\/+/g, '/');
+        } catch (e) {
+          normalised = '/import-job-postings';
+        }
+        if (/^\/import-job-postings(\/|$)/.test(normalised)) {
+          return { statusCode: 403, statusDescription: 'Forbidden' };
+        }
+      }
+
+      request.uri = path;
+      return request;
     }
   EOF
 }
@@ -151,8 +168,7 @@ resource "aws_cloudfront_distribution" "main" {
     cache_policy_id        = data.aws_cloudfront_cache_policy.caching_optimized.id
   }
 
-  # POST /import-job-postings can't be reached through CloudFront. Only GET, status updates (PATCH) and
-  # the CORS preflight are allowed.
+  # POST /api/import-job-postings is rejected with a 403 by the viewer-request function below.
   ordered_cache_behavior {
     path_pattern             = "/api/*"
     target_origin_id         = "api"
