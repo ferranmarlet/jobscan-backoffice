@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { apiFetch } from './auth'
 import { PagedTable, type Column, type Filter } from './PagedTable'
 
 const STATUSES = ['OPEN', 'APPLIED', 'REJECTED', 'CLOSED'] as const
@@ -47,7 +48,7 @@ function StatusSelect({ job, onUpdated }: { job: JobPosting; onUpdated: () => vo
     setSaving(true)
     setError(null)
     try {
-      const res = await fetch(`/api/job-postings/${job.id}`, {
+      const res = await apiFetch(`/job-postings/${job.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status }),

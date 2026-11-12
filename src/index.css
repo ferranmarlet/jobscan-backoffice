@@ -14,6 +14,24 @@ body {
   background: var(--background);
 }
 
+.app-header {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+}
+
+.auth-status {
+  max-width: 360px;
+  margin: 15vh auto 0;
+  padding: 0 16px;
+  text-align: center;
+}
+
 main {
   max-width: 1280px;
   margin: 0 auto;

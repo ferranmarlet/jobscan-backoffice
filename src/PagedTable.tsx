@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react'
+import { apiFetch } from './auth'
 
 // reload refetches the current page, for cells that change the row on the server
 export type Column<T> = { header: string; render: (row: T, reload: () => void) => ReactNode }
@@ -33,7 +34,7 @@ export function PagedTable<T>({ path, columns, rowKey, filters = [] }: Props<T>)
       page: String(page),
     })
     setLoading(true)
-    fetch(`/api${path}?${params}`, { signal: controller.signal })
+    apiFetch(`${path}?${params}`, { signal: controller.signal })
       .then((res) => {
         if (!res.ok) throw new Error(`Request failed with status ${res.status}`)
         return res.json()
