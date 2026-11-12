@@ -65,7 +65,8 @@ resource "aws_cognito_user_pool_client" "spa" {
   callback_urls                        = local.auth_redirects
   logout_urls                          = local.auth_redirects
 
-  explicit_auth_flows           = ["ALLOW_REFRESH_TOKEN_AUTH"]
+  # No explicit_auth_flows: ALLOW_REFRESH_TOKEN_AUTH can't be combined with refresh token
+  # rotation. The SPA signs in and refreshes through the OAuth endpoints (hosted login).
   enable_token_revocation       = true
   prevent_user_existence_errors = "ENABLED"
 
